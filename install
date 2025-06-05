@@ -1,0 +1,23 @@
+#!/bin/bash
+if [ $# -lt 1 ]; then
+    echo "You need to specify a version:"
+    echo "Python | Bash"
+    echo "Usage: ./install <Python|Bash>"
+    exit -1
+fi
+
+INSTALL_PATH="${INSTALL_PATH:-$HOME/.local/bin}"
+mkdir -p "$INSTALL_PATH"
+
+case "$1" in
+    python)
+        ;&
+    Python)
+        cp "panywhere.py" $INSTALL_PATH"/panywhere"
+        ;;
+    bash)
+        ;&
+    Bash)
+        cp "panywhere.bash" $INSTALL_PATH"/panywhere"
+        ;;
+esac
