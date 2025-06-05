@@ -34,14 +34,23 @@ get_file() {
 
     file_path=$2
     dirname=$(dirname "$file_path")
-    res=$(curl -s -X GET $api_host"/v0/user/$username/files/path/$base_path/$file_path" \
-        -H "$auth_header")
-    if [[ "$res" == "{"* ]]; then
-        echo "$res" | jq -r 'if has("detail") then .detail else to_entries | .[] | if .value.type == "directory" then "󰉋 \(.key)" else "󰈔 \(.key)" end end'
+    res=$(curl -i -s -X GET $api_host"/v0/user/$username/files/path/$base_path/$file_path" \
+        -H "$auth_header" | tr -d '\r')
+
+    headers=$(echo -n "$res" | sed '/^$/q')
+    content_type=$(echo -n "$headers" | grep 'Content-Type:' | cut -d ' ' -f2)
+
+    content=$(echo -n "$res" | sed '1,/^$/d')
+    if [[ "$content_type" == "application/json" ]]; then
+        echo "$content" | jq -r 'if has("detail") then .detail else to_entries | .[] | if .value.type == "directory" then "󰉋 \(.key)" else "󰈔 \(.key)" end end'
+        if [ ! $? -eq 0 ]; then
+            echo "Unknown response:"
+            echo "$content"
+        fi
     else
-        echo "$res"
+        echo "$content"
         mkdir -p "$dirname"
-        echo -n "$res" > "$file_path"
+        echo -n "$content" > "$file_path"
     fi
 }
 

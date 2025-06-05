@@ -79,16 +79,10 @@ def get_file():
                         headers={'Authorization': 'Token {token}'.format(token=token)})
     print("Código de estado:", res.status_code)
 
-    txt = res.text
-    if not txt.startswith('{'):
-        dir_i = file_path.rfind('/')
-        if dir_i != -1:
-            dir = file_path[:dir_i]
-            os.makedirs(dir, exist_ok=True)
-        with open(file_path, 'w') as file:
-            file.write(txt)
-            print(res.text)
-    else:
+    headers = res.headers
+    content = res.text
+
+    if headers['Content-Type'] == 'application/json':
         files = res.json()
         if 'detail' in files:
             print(files['detail'])
@@ -101,6 +95,14 @@ def get_file():
                 else:
                     print('󰈔 ', end='')
                 print(file)
+    else:
+        dir_i = file_path.rfind('/')
+        if dir_i != -1:
+            dir = file_path[:dir_i]
+            os.makedirs(dir, exist_ok=True)
+        with open(file_path, 'w') as file:
+            file.write(content)
+            print(content)
 
 def reload_page():
     url = host + '/v0/user/{username}/webapps/{domain_name}/reload/'.format(
