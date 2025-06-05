@@ -2,7 +2,7 @@
 
 if [ $# -lt 1 ]; then
     echo "You need to specify a action."
-    echo "Usage: $0 <cpu|upload|get|reload|upload-hook>"
+    echo "Usage: $0 <cpu|upload|get|reload|remove|upload-hook>"
     exit -1
 fi
 
@@ -71,9 +71,34 @@ upload_file() {
         -H "$auth_header" \
         -F "content=@"$file_path)
     if [ "$res" -eq 200 ]; then
-        echo "File '$file_path' updated."
+        echo "File '$file_path' was updated."
     else
-        echo "File '$file_path' created."
+        echo "File '$file_path' was created."
+    fi
+}
+
+remove_file() {
+    if [ $# -lt 2 ]; then
+        echo "You need to specify a file path."
+        echo "Usage: $0 $1 <fileName>"
+        exit -2
+    fi
+
+    file_path=$2
+    read -n1 -p "Are you sure you want to delete the file '$file_path'? Y/N (N) " answer
+    echo
+    if [[ "$answer" == 'Y' ]]; then
+        resfile=$(mktemp)
+        status=$(curl -w "%{http_code}" -o "$resfile" -s -X DELETE $api_host"/v0/user/$username/files/path/$base_path/$file_path" \
+            -H "$auth_header")
+
+        if [ "$status" -eq 204 ]; then
+            echo "The file '$file_path' was deleted."
+        else
+            cat "$resfile" | jq -r '"ERROR: \(.message)"'
+        fi
+
+        rm "$resfile"
     fi
 }
 
@@ -110,6 +135,9 @@ case "$1" in
         ;;
     reload)
         reload_webpage $@
+        ;;
+    remove)
+        remove_file $@
         ;;
     *)
         echo "Unknown action '$1'"

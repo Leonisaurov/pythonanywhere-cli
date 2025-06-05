@@ -57,9 +57,9 @@ def upload_file():
                             headers={'Authorization': 'Token {token}'.format(token=token)},
                             files=files)
     if res.status_code == 200:
-        print(f"File '{file_path}' updated.")
+        print(f"File '{file_path}' was updated.")
     else:
-        print(f"File '{file_path}' created.")
+        print(f"File '{file_path}' was created.")
 
 def get_file():
     if len(argv) != 3:
@@ -104,6 +104,28 @@ def get_file():
             file.write(content)
             print(content)
 
+def remove_file():
+    if len(argv) != 3:
+        print('You need to specify a file path')
+        print(f'Usage: {argv[0]} {argv[1]} <fileName>')
+        sys.exit(-1)
+
+    file_path = sys.argv[2]
+    if input(f"Are you sure you want to delete the file '{file_path}'? Y/N (N) ") == 'Y':
+        url = host + '/v0/user/{username}/files/path/{base_path}/{path}'.format(
+                username=username, 
+                base_path=base_server_file,
+                path=file_path) 
+
+        res = requests.delete(url,
+                            headers={'Authorization': 'Token {token}'.format(token=token)})
+        if res.status_code == 204:
+            print(f"The file '{file_path}' was deleted.")
+        else:
+            message = res.json()['message']
+            print(f'ERROR: {message}')
+
+
 def reload_page():
     url = host + '/v0/user/{username}/webapps/{domain_name}/reload/'.format(
         username=username,
@@ -134,6 +156,8 @@ elif cmd == 'upload':
     upload_file()
 elif cmd == 'reload':
     reload_page()
+elif cmd == 'remove':
+    remove_file()
 elif cmd == 'upload-hook':
     set_pre_commit()
 else:
