@@ -33,12 +33,14 @@ get_file() {
     fi
 
     file_path=$2
+    dirname=$(dirname "$file_path")
     res=$(curl -s -X GET $api_host"/v0/user/$username/files/path/$base_path/$file_path" \
         -H "$auth_header")
     if [[ "$res" == "{"* ]]; then
         echo "$res" | jq -r 'if has("detail") then .detail else to_entries | .[] | if .value.type == "directory" then "󰉋 \(.key)" else "󰈔 \(.key)" end end'
     else
         echo "$res"
+        mkdir -p "$dirname"
         echo -n "$res" > "$file_path"
     fi
 }
